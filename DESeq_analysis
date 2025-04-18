@@ -1,0 +1,94 @@
+library(openxlsx)
+library("dplyr")
+library(DESeq2)
+
+# Import count file from Excel
+raw_counts <- read_excel("Raw_Counts.xlsx") # Need to change to read.xlsx or add readxl library
+gene_name <- raw_counts$Gene
+dim(raw_counts) # Display dimensions of the raw counts data
+raw_counts <- raw_counts[,2:145] # Remove gene name column and keep only count data
+rownames(raw_counts) <- gene_name # Set gene names as row names
+
+# Read target information
+target_data <- read.table("targets_pyseqrna.txt", sep = "\t", header = T)
+
+### Checking dim of data to ensure consistency
+nrow(target_data) == ncol(raw_counts)
+
+# Create DESeq2 dataframe with minimal design
+target_data$Identifier <- as.factor(target_data$Identifier) # Ensure identifier is a factor
+dds <- DESeqDataSetFromMatrix(raw_counts,
+                              colData = target_data,
+                              design = ~ 1)
+
+## Collapse technical replicates
+dds_col <- collapseReplicates(dds, dds$Identifier, dds$Replication)
+
+### Verifying subset data from all sample collapsed data
+row_bf_coll <- rowSums(counts(dds)[, dds$Identifier == "GA"])
+all(row_bf_coll == counts(dds_col)[,"GA"])
+
+# Get unique Identifiers for pairwise comparisons
+unique_identifiers <- unique(as.character(dds_col$Identifier))  # Convert to character
+# View(unique_identifiers) # Consider commenting this out in production code
+
+# Initialize a list to store DESeq analysis results for each combination
+deseq_results_list <- list()
+
+# Loop over unique Identifier combinations for pairwise comparisons
+for (i in 1:(length(unique_identifiers) - 1)) {
+  for (j in (i+1):length(unique_identifiers)) {
+    # Subset collapsed dataset for the current pair of conditions
+    ddsDE <- dds_col[, dds_col$Identifier %in% c(unique_identifiers[i], unique_identifiers[j])]
+    
+    # Set reference factor
+    ref_factor <- unique_identifiers[i]
+    ddsDE$Identifier <- relevel(factor(ddsDE$Identifier), ref = ref_factor)
+    
+    # Remove low count data < 2
+    ddsDE <- ddsDE[rowSums(counts(ddsDE)) > 2, ]
+    
+    # Perform DESeq analysis
+    ddsDEq <- DESeq(ddsDE)
+    
+    # Store results in the list
+    deseq_results_list[[paste(unique_identifiers[i], unique_identifiers[j], sep = "_")]] <- results(ddsDEq)
+  }
+}
+
+## Make a list of combinations
+names_combination <- names(deseq_results_list)
+class(names_combination) # Check the class of the object
+
+# Create a Workbook for storing filtered DEGs
+Workbook <- createWorkbook()
+
+# Process each comparison and add to workbook
+for (i in names_combination) {
+  df_comb <- as.data.frame(deseq_results_list[[i]])
+  
+  # Filter based on p-adj <0.05, |LFC| > 2
+  df_comb_filter <- filter(df_comb, padj < 0.05)
+  df_comb_filter <- filter(df_comb_filter, log2FoldChange > 2 | log2FoldChange < -2)
+  sort_df <- df_comb_filter[order(df_comb_filter$padj),] # Sort by adjusted p-value
+  sort_df$Gene <- rownames(sort_df) # Add gene names as a column
+  
+  # Add worksheet in the Workbook
+  addWorksheet(Workbook, paste0(i))
+  writeData(Workbook, sheet = paste0(i), sort_df)
+}
+
+getwd() # Display current working directory
+saveWorkbook(Workbook, file = "DEG_workbook.xlsx") # Save the workbook (no need to assign to a variable)
+
+## Generate master summary file with statistics for all comparisons
+sink("Master Summary file.txt")
+for (i in names_combination) {
+  cat(paste0("Combination = ", i))
+  cat("\n")
+  summary(deseq_results_list[[i]], alpha = 0.1) # Summary with alpha 0.1
+  summary(deseq_results_list[[i]], alpha = 0.05) # Summary with alpha 0.05
+  cat("--------------")
+  cat("\n")
+}
+sink()
