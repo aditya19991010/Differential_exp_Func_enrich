@@ -6,7 +6,7 @@ This project showcases a complete pipeline for analyzing differentially expresse
 
 ⸻
 
-##🔥 Key Features
+## 🔥 Key Features
 	•	Data Preparation:
 	•	Handling raw count data and target identifiers.
 	•	Created 1128 unique pairwise combinations for comparison.
@@ -27,7 +27,7 @@ This project showcases a complete pipeline for analyzing differentially expresse
 
 ⸻
 
-##🛠 Tools & Technologies
+## 🛠 Tools & Technologies
 
 Tool	Purpose
 RStudio	Analysis environment
@@ -42,20 +42,20 @@ clusterProfiler	GSEA and enrichment analysis
 
 ⸻
 
-##📈 Sample Visualizations
+## 📈 Sample Visualizations
 	•	MA Plot: Highlights the magnitude and direction of differential expression.
 	•	Volcano Plot: Identifies statistically significant DEGs.
 	•	Venn Diagram: Shows overlaps under different thresholds.
 
 ⸻
 
-##🚧 Challenges Encountered
+## 🚧 Challenges Encountered
 	•	Non-model organism data (Hordeum vulgare) was missing from KEGG databases, requiring alternative universal enrichment strategies.
 	•	Observed slight discrepancies between GSEA and enricher() results, showcasing method sensitivity.
 
 ⸻
 
-##🧠 Skills Demonstrated
+## 🧠 Skills Demonstrated
 	•	Advanced R programming (looping, list handling, plotting).
 	•	Data cleaning, statistical analysis, and result organization.
 	•	Omics data interpretation and functional annotation.
@@ -63,7 +63,7 @@ clusterProfiler	GSEA and enrichment analysis
 
 ⸻
 
-##🚀 How to Run
+## 🚀 How to Run
 
 Note: This project assumes familiarity with R and basic bioinformatics tools.
 
@@ -71,7 +71,7 @@ Note: This project assumes familiarity with R and basic bioinformatics tools.
 	2.	Open the RStudio project file.
 	3.	Install necessary packages:
 
-##install.packages(c("DESeq2", "dplyr", "EnhancedVolcano", "VennDiagram", "gprofiler2", "clusterProfiler"))
+install.packages(c("DESeq2", "dplyr", "EnhancedVolcano", "VennDiagram", "gprofiler2", "clusterProfiler"))
 
 
 	4.	Follow the scripts for:
@@ -83,7 +83,7 @@ Note: This project assumes familiarity with R and basic bioinformatics tools.
 
 ⸻
 
-###📬 Contact
+### 📬 Contact
 
 If you want to connect, feel free to reach out!
 Aditya Naman Soni
